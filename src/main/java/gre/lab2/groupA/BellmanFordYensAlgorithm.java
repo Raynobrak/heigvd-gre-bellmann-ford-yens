@@ -4,11 +4,30 @@ import gre.lab2.graph.BFYResult;
 import gre.lab2.graph.IBellmanFordYensAlgorithm;
 import gre.lab2.graph.WeightedDigraph;
 
-import java.util.ArrayDeque;
-import java.util.Arrays;
+import java.util.*;
 
 public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm {
     private static final int INFINITY = Integer.MAX_VALUE;
+
+    private LinkedList<Integer> queue;
+    private HashSet<Integer> inQueue;
+
+    void addToQueue(Integer vertex) {
+        queue.addLast(vertex);
+        inQueue.add(vertex);
+    }
+
+    void addToQueueIfNotAlreadyIn(Integer vertex) {
+        if(!inQueue.contains(vertex))
+            addToQueue(vertex);
+    }
+
+    Integer nextFromQueue() {
+        var item = queue.removeFirst();
+        inQueue.remove(item);
+        return item;
+    }
+
     @Override
     public BFYResult compute(WeightedDigraph graph, int from) {
         final int N = graph.getNVertices();
@@ -26,23 +45,38 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
         final int sentinel = N;
 
         // File FIFO
-        var Q = new ArrayDeque<Integer>();
+        queue = new LinkedList<Integer>();
+        inQueue = new HashSet<Integer>();
 
-        Q.push(from);
-        Q.push(sentinel);
+        addToQueue(from);
+        addToQueue(sentinel);
 
-        while(!Q.isEmpty()) {
-            int current = Q.removeFirst();
+        while(!queue.isEmpty()) {
+            int current = nextFromQueue();
             if(current == sentinel) {
-                if(!Q.isEmpty()) {
+                if(!queue.isEmpty()) {
                     k++;
                     if(k == N) {
-                        // todo : circuit absorbant trouvé
-                        //return new BFYResult.NegativeCycle();
-                        System.out.println("R contient un circuit absorbant accessible depuis s");
+                        // looking for a vertex with a negative distance from source s
+                        for(int vertex = 0; vertex < d.length; ++vertex) {
+                            if(d[vertex] < 0) {
+                                var circuit = new ArrayList<Integer>();
+
+                                // 'vertex' is part of a negative cost circuit
+                                int circuit_begin = vertex;
+                                // reverse-exploring the circuit to find all vertices
+                                do
+                                    circuit.add(vertex);
+                                while((vertex = pred[vertex]) != circuit_begin);
+
+                                var circuitInCorrectOrder = circuit.reversed();
+                                return new BFYResult.NegativeCycle(circuitInCorrectOrder, circuit.size());
+                            }
+                        }
+                        throw new RuntimeException("absorbing circuit should have been found");
                     }
                     else {
-                        Q.push(sentinel);
+                        addToQueue(sentinel);
                     }
                 }
             }
@@ -55,10 +89,7 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
                     if(d[successor] > d[current] + outgoingEdge.weight()){
                         d[successor] = d[current] + outgoingEdge.weight();
                         pred[successor] = current;
-                        // TODO ne pas utiliser contains
-                        if(!Q.contains(successor)) {
-                            Q.push(successor);
-                        }
+                        addToQueueIfNotAlreadyIn(successor);
                     }
                 }
             }
