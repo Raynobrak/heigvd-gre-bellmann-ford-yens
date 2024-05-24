@@ -10,21 +10,21 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
     private static final int INFINITY = Integer.MAX_VALUE;
 
     private LinkedList<Integer> queue;
-    private HashSet<Integer> inQueue;
+    private boolean[] inQueue;
 
     void addToQueue(Integer vertex) {
         queue.addLast(vertex);
-        inQueue.add(vertex);
+        inQueue[vertex] = true;
     }
 
     void addToQueueIfNotAlreadyIn(Integer vertex) {
-        if(!inQueue.contains(vertex))
+        if(!inQueue[vertex])
             addToQueue(vertex);
     }
 
     Integer nextFromQueue() {
         var item = queue.removeFirst();
-        inQueue.remove(item);
+        inQueue[item] = false;
         return item;
     }
 
@@ -46,7 +46,7 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
 
         // File FIFO
         queue = new LinkedList<Integer>();
-        inQueue = new HashSet<Integer>();
+        inQueue = new boolean[N + 1]; // n + 1 for the sentinel
 
         addToQueue(from);
         addToQueue(sentinel);
@@ -65,12 +65,31 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
                                 // 'vertex' is part of a negative cost circuit
                                 int circuit_begin = vertex;
                                 // reverse-exploring the circuit to find all vertices
-                                do
+                                do {
+                                    if(d[vertex] < 0)
+                                        System.out.println(vertex + " " + circuit_begin);
                                     circuit.add(vertex);
+                                }
                                 while((vertex = pred[vertex]) != circuit_begin);
 
                                 var circuitInCorrectOrder = circuit.reversed();
-                                return new BFYResult.NegativeCycle(circuitInCorrectOrder, circuit.size());
+
+                                int circuitLength = 0;
+                                for(int i = 0; i < circuitInCorrectOrder.size(); ++i) {
+                                    var v = circuitInCorrectOrder.get(i);
+
+                                    if(i+1 < circuitInCorrectOrder.size()) {
+                                        var next = circuitInCorrectOrder.get(i+1);
+
+                                        for(var edge : graph.getOutgoingEdges(v)) {
+                                            if(edge.to() == next) {
+                                                circuitLength += edge.weight();
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                return new BFYResult.NegativeCycle(circuitInCorrectOrder, circuitLength);
                             }
                         }
                         throw new RuntimeException("absorbing circuit should have been found");
