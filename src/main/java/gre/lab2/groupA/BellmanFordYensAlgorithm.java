@@ -14,7 +14,7 @@ import java.util.*;
 public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm {
     private static final int INFINITY = Integer.MAX_VALUE;
 
-    private LinkedList<Integer> queue;
+    private ArrayDeque<Integer> queue;
 
     /**
      * Array of booleans used to check if a vertex is in the queue or not
@@ -59,18 +59,18 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
     public BFYResult compute(WeightedDigraph graph, int from) {
         final int N = graph.getNVertices(); // Number of vertices
 
-        int[] pred = new int[N]; // Array of predecessors
-        Arrays.fill(pred, BFYResult.UNREACHABLE);
+        int[] predecessors = new int[N]; // Array of best predecessors, all unreachable by default
+        Arrays.fill(predecessors, BFYResult.UNREACHABLE);
 
-        int[] d = new int[N]; // Array of distances from the source
+        int[] d = new int[N]; // Array of distances from the source, all equal to infinity by default
         Arrays.fill(d, INFINITY);
 
-        d[from] = 0;
+        d[from] = 0; // source is at a distance zero from the source
 
-        int k = 0; // Number of iterations
+        int iterationNumber = 0; // Number of iterations
 
-        // FIFO queue
-        queue = new LinkedList<Integer>();
+        // Queue containing the vertices to process
+        queue = new ArrayDeque<Integer>();
         inQueue = new boolean[N + 1]; // n + 1 for the sentinel
 
         addToQueue(from);
@@ -80,31 +80,35 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
             int current = nextFromQueue();
             if(current == N) {
                 if(!queue.isEmpty()) {
-                    k++;
-                    if(k == N) {
+                    iterationNumber++;
+                    if(iterationNumber == N) {
                         // looking for a vertex with a negative distance from source s
                         for(int vertex = 0; vertex < d.length; ++vertex) {
                             if(d[vertex] < 0) {
                                 var circuit = new ArrayList<Integer>();
 
+                                var verticesOccurences = new int[N];
+
                                 // 'vertex' is part of a negative cost circuit
                                 int circuit_begin = vertex;
+
                                 // reverse-exploring the circuit to find all vertices
                                 do {
-                                    if(d[vertex] < 0)
-                                        System.out.println(vertex + " " + circuit_begin);
-                                    circuit.add(vertex);
-                                }
-                                while((vertex = pred[vertex]) != circuit_begin);
+                                    verticesOccurences[vertex]++;
 
-                                var circuitInCorrectOrder = circuit.reversed();
+                                    if(verticesOccurences[vertex] == 2) {
+                                        // found a cycle
+                                        circuit.addFirst(vertex);
+                                    }
+                                }
+                                while(verticesOccurences[vertex = predecessors[vertex]] != 3);
 
                                 int circuitLength = 0;
-                                for(int i = 0; i < circuitInCorrectOrder.size(); ++i) {
-                                    var v = circuitInCorrectOrder.get(i);
+                                for(int i = 0; i < circuit.size(); ++i) {
+                                    var v = circuit.get(i);
 
-                                    if(i+1 < circuitInCorrectOrder.size()) {
-                                        var next = circuitInCorrectOrder.get(i+1);
+                                    if(i+1 < circuit.size()) {
+                                        var next = circuit.get(i+1);
 
                                         for(var edge : graph.getOutgoingEdges(v)) {
                                             if(edge.to() == next) {
@@ -114,7 +118,7 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
                                         }
                                     }
                                 }
-                                return new BFYResult.NegativeCycle(circuitInCorrectOrder, circuitLength);
+                                return new BFYResult.NegativeCycle(circuit, circuitLength);
                             }
                         }
                         throw new RuntimeException("Un circuit absorbant aurait dû être trouvé!");
@@ -131,12 +135,12 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
                     // λj > λi + cij --> update distance and predecessor of the 'successor' vertex
                     if(d[successor] > d[current] + outgoingEdge.weight()){
                         d[successor] = d[current] + outgoingEdge.weight();
-                        pred[successor] = current;
+                        predecessors[successor] = current;
                         addToQueueIfNotAlreadyIn(successor);
                     }
                 }
             }
         }
-        return new BFYResult.ShortestPathTree(d, pred);
+        return new BFYResult.ShortestPathTree(d, predecessors);
     }
 }

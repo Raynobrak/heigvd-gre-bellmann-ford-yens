@@ -45,12 +45,12 @@ public final class Main {
      * @param name name of the weighted digraph that will be printed
      */
     static void printBFYResult(BFYResult result, String name) {
-        String bar = "----------[ " + name + " ]----------";
+        String bar = "------------[ " + name + " ]------------";
         System.out.println(bar);
 
         if(result.isNegativeCycle()) {
             System.out.println("> Le graphe contient un circuit absorbant.");
-            System.out.println("Circuit trouvé :");
+            System.out.println("> Circuit trouvé :");
             System.out.println("- poids du circuit : " + result.getNegativeCycle().length());
             System.out.println("- sommets du circuit : " + result.getNegativeCycle().vertices());
         }
@@ -59,11 +59,11 @@ public final class Main {
 
             var tree = result.getShortestPathTree();
             if(tree.distances().length < 25) {
-                System.out.println("Résultat de l'algorithme :");
+                System.out.println("> Résultat de l'algorithme :");
                 System.out.println("- Tableau des distances : " + Arrays.toString(tree.distances()));
                 System.out.println("- Tableau des prédécesseurs : " + Arrays.toString(tree.predecessors()));
             }
         }
-        System.out.println(new String(new char[bar.length()]).replace('\0', '-'));
+        System.out.println(new String(new char[bar.length()]).replace('\0', '-') + "\n\n");
     }
 }
