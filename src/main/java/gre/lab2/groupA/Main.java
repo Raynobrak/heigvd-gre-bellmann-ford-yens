@@ -24,19 +24,12 @@ public final class Main {
 
         var algorithm = new BellmanFordYensAlgorithm();
 
-        var result_5_2 = algorithm.compute(reseau_5_2, 0);
-        var result_5_3 = algorithm.compute(reseau_5_3, 0);
-        printBFYResult(result_5_2, "Réseau exo 5.2");
-        printBFYResult(result_5_3, "Réseau exo 5.3");
-
-        var result1 = algorithm.compute(reseau1, 0);
-        var result2 = algorithm.compute(reseau2, 0);
-        var result3 = algorithm.compute(reseau3, 0);
-        var result4 = algorithm.compute(reseau4, 0);
-        printBFYResult(result1, "Réseau 1");
-        printBFYResult(result2, "Réseau 2");
-        printBFYResult(result3, "Réseau 3");
-        printBFYResult(result4, "Réseau 4");
+        printBFYResult(algorithm.compute(reseau_5_2, 0), "Réseau exo 5.2");
+        printBFYResult(algorithm.compute(reseau_5_3, 0), "Réseau exo 5.3");
+        printBFYResult(algorithm.compute(reseau1, 0), "Réseau 1");
+        printBFYResult(algorithm.compute(reseau2, 0), "Réseau 2");
+        printBFYResult(algorithm.compute(reseau3, 0), "Réseau 3");
+        printBFYResult(algorithm.compute(reseau4, 0), "Réseau 4");
     }
 
     /**
@@ -64,6 +57,6 @@ public final class Main {
                 System.out.println("- Tableau des prédécesseurs : " + Arrays.toString(tree.predecessors()));
             }
         }
-        System.out.println(new String(new char[bar.length()]).replace('\0', '-') + "\n\n");
+        System.out.println(new String(new char[bar.length()]).replace('\0', '-') + "\n");
     }
 }
